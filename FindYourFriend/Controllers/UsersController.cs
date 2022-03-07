@@ -1,39 +1,51 @@
-﻿using FindYourFriend.Data;
+using AutoMapper;
+using FindYourFriend.Data;
+using FindYourFriend.DTOs;
 using FindYourFriend.Entities;
+using FindYourFriend.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace FindYourFriend.Controllers
 {
-    public class UsersController : BaseApiController
+  [Authorize]
+  public class UsersController : BaseApiController
+  {
+
+    private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
+
+    public UsersController(IUserRepository userRepository, IMapper mapper)
     {
-        private readonly DataContext _context;
-        public UsersController(DataContext context)
-        {
-            _context = context;
-        }
 
-        [AllowAnonymous]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers()
-        {
-
-            return await _context.Users.ToListAsync();
-           
-        }
-        [Authorize]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<AppUser>> GetUser(int id)
-        {
-
-            return await _context.Users.FindAsync(id);
-           
-        }
+      _userRepository = userRepository;
+      _mapper = mapper;
     }
+
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<MemberDTO>>> GetUsers()
+    {
+      var users = await _userRepository.GetMembersAsync();
+     
+      return Ok(users);
+
+    }
+
+    [HttpGet("{username}")]
+    public async Task<ActionResult<MemberDTO>> GetUser(string username)
+    {
+
+     return await _userRepository.GetMemberAsync(username);
+     
+
+    }
+  }
 }
